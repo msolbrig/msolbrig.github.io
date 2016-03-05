@@ -17,6 +17,7 @@
   };
 
   myConnector.getColumnHeaders = function() {
+    console.log("getColumnHeaders");
     _retrieveJsonData(function (tableData) {
       var headers = tableData.headers;
       var fieldNames = [];
@@ -33,6 +34,7 @@
   };
       
   myConnector.getTableData = function (lastRecordToken) {
+    console.log("getTableData");
     _retrieveJsonData(function (tableData) {
       var rowData = tableData.rowData;
       tableau.dataCallback(rowData, rowData.length.toString(), false);
@@ -64,16 +66,19 @@
 
   function _buildUrl(searchTerm, category, language) {
     var url = "http://healthycanadians.gc.ca/recall-alert-rappel-avis/api/search?search="
-        + searchTerm + "&lang=" + _getLanguage(language) + "&cat=" + getCategory(category) + "&lim=100&off=0
+        + encodeURIComponent(searchTerm) + "&lang=" + _getLanguage(language) + "&cat=" + _getCategory(category) + "&lim=100&off=0"
+    console.log(url);
     return url;
   }
 
 
 function _retrieveJsonData(retrieveDataCallback) {
+  console.log("retrieveJsonData");
   if (!window.cachedTableData) {
     var conData = JSON.parse(tableau.connectionData);
     var successCallback = function(data) 
     {
+      console.log("successCallback")
       window.cachedTableData = _jsToTable(data);
       retrieveDataCallback(window.cachedTableData);
     };
@@ -90,6 +95,7 @@ function _retrieveJsonData(retrieveDataCallback) {
     _basicAjaxRequest1(url, successCallback);
     return;
   }
+  retrieveDataCallback(window.cachedTableData);
 }
 
 // There are a lot of ways to handle URLS. Sometimes we'll need workarounds for CORS. These
@@ -248,7 +254,7 @@ function _determineType(primitive) {
   return 'string';
 }
 
-function _submitToJsonToTableau(searchTerm) {
+function _submitToJsonToTableau(searchTerm, category, language) {
     var conData = {"searchTerm": searchTerm, "category": category, "language": language};
     tableau.connectionData = JSON.stringify(conData);
     tableau.submit();  
@@ -262,7 +268,8 @@ $(document).ready(function(){
   $("#inputForm").submit(function(e) { // This event fires when a button is clicked
     // Since we use a form for input, make sure to stop the default form behavior
     cancel(e);
-    _submitToJsonToTableau(searchTerm, category, language);
+    _submitToJsonToTableau($('input[name=searchTerm]')[0].value, $('input[name=category]')[0].value, 
+        $('input[name=language]')[0].value);
   });
 });
 
