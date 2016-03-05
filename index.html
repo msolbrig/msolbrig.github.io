@@ -4,7 +4,8 @@
 <script language="JavaScript">
 
     var parameter = location.search.substring(1);
-    document.write(parameter);
+    var text = decodeURIComponent(parameter);
+    document.write(text);
 </script>
 </body>
 </html>
