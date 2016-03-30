@@ -1,0 +1,74 @@
+
+<!doctype html>
+
+<meta charset="utf-8">
+<title>TFS State Diagram</title>
+
+<link rel="stylesheet" href="demo.css">
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="http://cpettitt.github.io/project/dagre-d3/latest/dagre-d3.js"></script>
+
+<style id="css">
+body {
+  font: 300 14px 'Helvetica Neue', Helvetica;
+}
+.node rect {
+  stroke: #333;
+  fill: #fff;
+}
+.edgePath path {
+  stroke: #333;
+  fill: #333;
+  stroke-width: 1.5px;
+}
+</style>
+
+<svg width=960 height=600><g/></svg>
+
+<script id="js">
+// Create a new directed graph
+var g = new dagreD3.graphlib.Graph().setGraph({});
+// States and transitions from RFC 793
+var states = [ "0-Does not exist", "1-Requested", "2-Accepted", "3-Planned",
+               "4-In Progress","5-Resolved (test)",
+               "5-Resolved (Bora)", "6-Done"];
+// Automatically label each of the nodes
+states.forEach(function(state) { g.setNode(state, { label: state }); });
+// Set up the edges
+g.setEdge("0-Does not exist",     "1-Requested",     { label: "Anyone, Any Time" });
+g.setEdge("1-Requested",     "2-Accepted",     { label: "Meets Ready" });
+g.setEdge("2-Accepted",     "3-Planned",   { label: "Will do this sprint" });
+g.setEdge("3-Planned",   "4-In Progress",  { label: "Claiming item" });
+g.setEdge("4-In Progress",   "5-Resolved (test)",  { label: "Resolved to Test" });
+g.setEdge("5-Resolved (test)",   "5-Resolved (Bora)",  { label: "Bora Verifying" });
+g.setEdge("5-Resolved (Bora)",   "6-Done",      { label: "Done" });
+// Set some general styles
+g.nodes().forEach(function(v) {
+  var node = g.node(v);
+  node.rx = node.ry = 5;
+});
+// Add some custom colors based on state
+g.node('0-Does not exist').style = "fill: #f77";
+g.node('6-Done').style = "fill: #7f7";
+var svg = d3.select("svg"),
+    inner = svg.select("g");
+// Set up zoom support
+var zoom = d3.behavior.zoom().on("zoom", function() {
+      inner.attr("transform", "translate(" + d3.event.translate + ")" +
+                                  "scale(" + d3.event.scale + ")");
+    });
+svg.call(zoom);
+// Create the renderer
+var render = new dagreD3.render();
+// Run the renderer. This is what draws the final graph.
+render(inner, g);
+// Center the graph
+var initialScale = 0.75;
+zoom
+  .translate([(svg.attr("width") - g.graph().width * initialScale) / 2, 20])
+  .scale(initialScale)
+  .event(svg);
+svg.attr('height', g.graph().height * initialScale + 40);
+</script>
+
+<script src="demo.js"></script>
